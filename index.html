@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energiebedarf — Kalorienrechner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="wrap">
+
+  <aside class="readout">
+    <p class="readout-eyebrow">Dein Energiebudget</p>
+    <div class="readout-figure">
+      <span id="readoutValue">—</span>
+      <span class="readout-unit">kcal / Tag</span>
+    </div>
+    <p class="readout-caption" id="readoutCaption">Fülle das Formular aus, um dein Ergebnis zu sehen.</p>
+
+    <div class="readout-macros" id="readoutMacros" hidden>
+      <div class="macro-row">
+        <span class="macro-label">Protein</span>
+        <span class="macro-track"><span class="macro-fill" id="fillProtein"></span></span>
+        <span class="macro-grams" id="gProtein">0 g</span>
+      </div>
+      <div class="macro-row">
+        <span class="macro-label">Kohlenhydrate</span>
+        <span class="macro-track"><span class="macro-fill" id="fillCarbs"></span></span>
+        <span class="macro-grams" id="gCarbs">0 g</span>
+      </div>
+      <div class="macro-row">
+        <span class="macro-label">Fett</span>
+        <span class="macro-track"><span class="macro-fill" id="fillFat"></span></span>
+        <span class="macro-grams" id="gFat">0 g</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="panel">
+    <nav class="site-nav" aria-label="Hauptnavigation">
+      <a class="nav-link active" href="index.html">Rechner</a>
+      <a class="nav-link" href="kalender.html">Tageskalender</a>
+      <a class="nav-link" href="gerichte.html">Gerichte</a>
+    </nav>
+
+    <header class="intro">
+      <h1>Wie viel Energie braucht dein Körper?</h1>
+      <p>Trag deine Werte ein — der Rechner ermittelt deinen Grundumsatz, deinen täglichen Bedarf und die passende Nährstoffverteilung für dein Ziel.</p>
+    </header>
+
+    <form id="calcForm">
+
+      <fieldset class="field-group">
+        <legend>Geschlecht</legend>
+        <div class="choice-row">
+          <label class="choice">
+            <input type="radio" name="gender" value="male" checked>
+            <span>Männlich</span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="gender" value="female">
+            <span>Weiblich</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="field-group two-col">
+        <div class="field">
+          <label for="age">Alter</label>
+          <div class="input-suffix">
+            <input type="number" id="age" min="14" max="100" value="18" required>
+            <span>Jahre</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="height">Grösse</label>
+          <div class="input-suffix">
+            <input type="number" id="height" min="120" max="230" value="175" required>
+            <span>cm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group two-col">
+        <div class="field">
+          <label for="weight">Gewicht</label>
+          <div class="input-suffix">
+            <input type="number" id="weight" min="30" max="250" step="0.1" value="70" required>
+            <span>kg</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="activity">Aktivitätslevel</label>
+          <select id="activity">
+            <option value="1.2">Sitzend — kaum Bewegung</option>
+            <option value="1.375">Leicht aktiv — 1–3× Sport/Woche</option>
+            <option value="1.55" selected>Mässig aktiv — 3–5× Sport/Woche</option>
+            <option value="1.725">Sehr aktiv — 6–7× Sport/Woche</option>
+            <option value="1.9">Extrem aktiv — körperliche Arbeit + Sport</option>
+          </select>
+        </div>
+      </div>
+
+      <fieldset class="field-group">
+        <legend>Dein Ziel</legend>
+        <div class="choice-row three">
+          <label class="choice">
+            <input type="radio" name="goal" value="lose">
+            <span>Abnehmen</span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="goal" value="maintain" checked>
+            <span>Gewicht halten</span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="goal" value="gain">
+            <span>Zunehmen</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="submit-btn">Bedarf berechnen</button>
+    </form>
+
+    <section class="result" id="resultSection" hidden>
+      <div class="result-split">
+        <div class="result-block">
+          <p class="result-label">Grundumsatz (BMR)</p>
+          <p class="result-value" id="bmrValue">0 kcal</p>
+          <p class="result-hint">Was dein Körper in Ruhe verbraucht.</p>
+        </div>
+        <div class="result-block">
+          <p class="result-label">Gesamtumsatz (TDEE)</p>
+          <p class="result-value" id="tdeeValue">0 kcal</p>
+          <p class="result-hint">Inklusive deiner Alltags- und Sportaktivität.</p>
+        </div>
+        <div class="result-block accent">
+          <p class="result-label">Zielwert für dein Vorhaben</p>
+          <p class="result-value" id="goalValue">0 kcal</p>
+          <p class="result-hint" id="goalHint"></p>
+        </div>
+      </div>
+
+      <div class="advice">
+        <h2>Was das für deinen Teller bedeutet</h2>
+        <p id="adviceText"></p>
+        <ul class="advice-list" id="adviceList"></ul>
+      </div>
+
+      <p class="disclaimer">Diese Werte sind Schätzungen auf Basis der Mifflin-St-Jeor-Formel und ersetzen keine individuelle Ernährungsberatung — bei gesundheitlichen Fragen wende dich an eine Fachperson.</p>
+    </section>
+
+  </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
