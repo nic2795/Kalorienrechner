@@ -1,28 +1,29 @@
 const form = document.getElementById('calcForm');
 const resultSection = document.getElementById('resultSection');
+const dial = createDial(document.getElementById('dial'));
 
 const goalConfig = {
   lose: {
     label: 'Abnehmen',
     delta: -500,
-    hint: 'Ein Defizit von ca. 500 kcal entspricht rund 0.5 kg Gewichtsverlust pro Woche.',
+    hint: 'Rund 500 kcal unter deinem Bedarf, das sind etwa 0.5 kg weniger pro Woche.',
     proteinPerKg: 2.0,
-    advice: 'Achte im Defizit besonders auf ausreichend Protein — das schützt deine Muskulatur — und auf sättigende, ballaststoffreiche Lebensmittel wie Gemüse, Hülsenfrüchte und Vollkornprodukte.',
+    advice: 'Im Defizit schützt genug Protein deine Muskeln. Sättigende, ballaststoffreiche Lebensmittel wie Gemüse, Hülsenfrüchte und Vollkorn helfen dir, durchzuhalten.',
     tips: [
-      'Mageres Fleisch, Fisch, Eier, Quark oder Tofu für die Proteinzufuhr',
+      'Mageres Fleisch, Fisch, Eier, Quark oder Tofu als Proteinquelle',
       'Viel Gemüse und Salat für Volumen bei wenig Kalorien',
-      'Vollkorn-Kohlenhydrate statt raffiniertem Zucker und Weissmehl',
-      'Genug trinken, vor allem Wasser und ungesüsste Getränke'
+      'Vollkorn statt Zucker und Weissmehl',
+      'Genug trinken, am besten Wasser und ungesüsste Getränke'
     ]
   },
   maintain: {
     label: 'Gewicht halten',
     delta: 0,
-    hint: 'Dieser Wert entspricht deinem geschätzten Gesamtumsatz — dein Gewicht sollte damit stabil bleiben.',
+    hint: 'Entspricht deinem Gesamtumsatz. Dein Gewicht sollte damit stabil bleiben.',
     proteinPerKg: 1.6,
-    advice: 'Für ein stabiles Gewicht zählt vor allem eine ausgewogene Mischung aus allen drei Nährstoffen über den Tag verteilt.',
+    advice: 'Für ein stabiles Gewicht zählt eine ausgewogene Mischung aller drei Nährstoffe, verteilt über den Tag.',
     tips: [
-      'Regelmässige Mahlzeiten mit Protein-, Kohlenhydrat- und Fettquelle',
+      'Regelmässige Mahlzeiten mit Protein, Kohlenhydraten und Fett',
       'Vollwertige Kohlenhydrate wie Vollkornbrot, Reis oder Kartoffeln',
       'Gesunde Fette aus Nüssen, Olivenöl oder Avocado',
       'Viel Gemüse und Früchte für Vitamine und Ballaststoffe'
@@ -31,17 +32,35 @@ const goalConfig = {
   gain: {
     label: 'Zunehmen',
     delta: 400,
-    hint: 'Ein moderater Überschuss von ca. 400 kcal fördert Muskelaufbau, ohne zu viel Fettmasse aufzubauen.',
+    hint: 'Rund 400 kcal über deinem Bedarf. Genug für Muskelaufbau, ohne viel Fett anzusetzen.',
     proteinPerKg: 1.8,
-    advice: 'Für einen Aufbau brauchst du zusätzliche Energie vor allem aus Kohlenhydraten, kombiniert mit genug Protein für den Muskelaufbau und regelmässigem Krafttraining.',
+    advice: 'Für den Aufbau brauchst du zusätzliche Energie, vor allem aus Kohlenhydraten, dazu genug Protein und regelmässiges Krafttraining.',
     tips: [
       'Kohlenhydratreiche Beilagen wie Reis, Nudeln, Haferflocken oder Brot',
-      'Protein zu jeder Hauptmahlzeit — Fleisch, Fisch, Milchprodukte, Hülsenfrüchte',
-      'Kalorienreiche, gesunde Fette wie Nüsse, Nussmus oder Olivenöl',
-      'Nicht zu viele Kalorien aus Süssgetränken — lieber vollwertige Lebensmittel'
+      'Protein zu jeder Hauptmahlzeit: Fleisch, Fisch, Milchprodukte, Hülsenfrüchte',
+      'Energiereiche Fette wie Nüsse, Nussmus oder Olivenöl',
+      'Lieber vollwertige Lebensmittel als Süssgetränke'
     ]
   }
 };
+
+function showReadout(m) {
+  document.getElementById('readoutValue').textContent = m.goalCalories;
+  document.getElementById('readoutCaption').textContent = `Tagesziel, Ziel: ${goalConfig[m.goal].label}`;
+
+  document.getElementById('gProtein').textContent = `${m.proteinG} g`;
+  document.getElementById('gCarbs').textContent = `${m.carbsG} g`;
+  document.getElementById('gFat').textContent = `${m.fatG} g`;
+
+  const pct = (kcal) => `${Math.min(kcal / m.goalCalories * 100, 100)}%`;
+  document.getElementById('fillProtein').style.width = pct(m.proteinKcal);
+  document.getElementById('fillCarbs').style.width = pct(m.carbsKcal);
+  document.getElementById('fillFat').style.width = pct(m.fatKcal);
+
+  document.getElementById('readoutMacros').hidden = false;
+  document.querySelector('.readout').classList.add('has-value');
+  dial.setShares(macroShares(m));
+}
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -62,8 +81,6 @@ form.addEventListener('submit', (e) => {
   const tdee = bmr * activity;
   const config = goalConfig[goal];
   const goalCalories = Math.round(tdee + config.delta);
-  localStorage.setItem('kalorienrechner-ziel', goalCalories);
-  localStorage.setItem('kalorienrechner-goal', goal);
 
   const proteinG = Math.round(config.proteinPerKg * weight);
   const proteinKcal = proteinG * 4;
@@ -71,6 +88,13 @@ form.addEventListener('submit', (e) => {
   const fatG = Math.round(fatKcal / 9);
   const carbsKcal = Math.max(goalCalories - proteinKcal - fatKcal, 0);
   const carbsG = Math.round(carbsKcal / 4);
+
+  const macros = { goal, goalCalories, proteinG, carbsG, fatG, proteinKcal, carbsKcal, fatKcal };
+  try {
+    localStorage.setItem('kalorienrechner-ziel', goalCalories);
+    localStorage.setItem('kalorienrechner-goal', goal);
+    localStorage.setItem('kalorienrechner-makros', JSON.stringify(macros));
+  } catch (err) { /* Speicher nicht verfügbar */ }
 
   document.getElementById('bmrValue').textContent = `${Math.round(bmr)} kcal`;
   document.getElementById('tdeeValue').textContent = `${Math.round(tdee)} kcal`;
@@ -86,19 +110,11 @@ form.addEventListener('submit', (e) => {
     list.appendChild(li);
   });
 
-  document.getElementById('readoutValue').textContent = goalCalories;
-  document.getElementById('readoutCaption').textContent = `Empfehlung für dein Ziel: ${config.label}`;
-
-  document.getElementById('gProtein').textContent = `${proteinG} g`;
-  document.getElementById('gCarbs').textContent = `${carbsG} g`;
-  document.getElementById('gFat').textContent = `${fatG} g`;
-
-  document.getElementById('fillProtein').style.width = `${Math.min(proteinKcal / goalCalories * 100, 100)}%`;
-  document.getElementById('fillCarbs').style.width = `${Math.min(carbsKcal / goalCalories * 100, 100)}%`;
-  document.getElementById('fillFat').style.width = `${Math.min(fatKcal / goalCalories * 100, 100)}%`;
-
-  document.getElementById('readoutMacros').hidden = false;
+  showReadout(macros);
   resultSection.hidden = false;
   resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
+// Letztes Ergebnis wieder anzeigen
+const previous = storedMacros();
+if (previous && goalConfig[previous.goal]) showReadout(previous);

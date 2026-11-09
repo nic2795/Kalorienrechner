@@ -1,6 +1,6 @@
 const recipes = [
   {
-    title: 'Gỏi Gà — vietnamesischer Hähnchen-Salat',
+    title: 'Gỏi Gà, vietnamesischer Hähnchen-Salat',
     goal: 'lose',
     category: 'Proteinreich & leicht',
     time: '30 min',
@@ -82,33 +82,48 @@ const goalLabels = {
 const recipeGrid = document.getElementById('recipeGrid');
 const goalIntro = document.getElementById('goalIntro');
 const filterButtons = document.querySelectorAll('.goal-filter');
-let selectedGoal = localStorage.getItem('kalorienrechner-goal') || 'maintain';
+const dial = createDial(document.getElementById('dial'));
+
+function load(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+let selectedGoal = load('kalorienrechner-goal') || 'maintain';
+
+const macros = storedMacros();
+if (macros) {
+  document.getElementById('readoutValue').textContent = macros.goalCalories;
+  document.getElementById('readoutCaption').textContent = `Dein Tagesziel aus dem Rechner. Ein Hauptgericht deckt davon meist ein Viertel bis ein Drittel.`;
+  document.querySelector('.readout').classList.add('has-value');
+  dial.setShares(macroShares(macros));
+}
 
 function renderRecipes() {
   recipeGrid.innerHTML = '';
   const matchingRecipes = recipes.filter((recipe) => recipe.goal === selectedGoal);
-  goalIntro.textContent = `Ausgewählt für: ${goalLabels[selectedGoal]}. Die Gerichte sind nach Portionsgrösse und Zutaten anpassbar.`;
+  goalIntro.textContent = `${matchingRecipes.length} Ideen zum Ziel ${goalLabels[selectedGoal]}. Portionsgrösse und Zutaten kannst du an deinen Bedarf anpassen.`;
 
   matchingRecipes.forEach((recipe) => {
     const card = document.createElement('article');
     card.className = 'recipe-card';
     card.innerHTML = `
-      <div class="recipe-card-top"><span>${recipe.category}</span><span>${recipe.time}</span></div>
+      <p class="recipe-meta"><span>${recipe.category}</span><span>${recipe.time}</span></p>
       <h2>${recipe.title}</h2>
-      <p>${recipe.description}</p>
-      <a class="recipe-source" href="${recipe.url}" target="_blank" rel="noopener noreferrer">Rezept bei ${recipe.source} öffnen <span aria-hidden="true">↗</span></a>`;
+      <p class="recipe-text">${recipe.description}</p>
+      <a class="recipe-source" href="${recipe.url}" target="_blank" rel="noopener noreferrer">Rezept bei ${recipe.source}</a>`;
     recipeGrid.appendChild(card);
   });
 
   filterButtons.forEach((button) => {
-    button.classList.toggle('selected', button.dataset.goal === selectedGoal);
+    const active = button.dataset.goal === selectedGoal;
+    button.classList.toggle('selected', active);
+    button.setAttribute('aria-pressed', active);
   });
 }
 
 filterButtons.forEach((button) => {
   button.addEventListener('click', () => {
     selectedGoal = button.dataset.goal;
-    localStorage.setItem('kalorienrechner-goal', selectedGoal);
+    try { localStorage.setItem('kalorienrechner-goal', selectedGoal); } catch (e) { /* ignorieren */ }
     renderRecipes();
   });
 });
